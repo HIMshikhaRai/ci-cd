@@ -1,0 +1,75 @@
+name: Github Action Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+      - 'doc/**'
+      - '.git/'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Run flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  build_ios:
+    name: Build Flutter (iOS)
+    needs: [build]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run flutter
+          uses: subosito/flutter-action@v2
+          with:
+            channel: "stable"
+      - run: flutter pub get
+      - run: flutter clean
+      - run: flutter build ios --no-codesign
+
+  build_bundle:
+    name: Build FLutter(Android)
+    needs: [ build ]
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Setup Melos
+        uses: bluefireteam/melos-action@v2
+
+      - name: Install dependencies for all packages
+        run: melos build:pub_get:all
+
+      - name: Build Android app
+        run: |
+          pushd app/
+          flutter build appbundle --obfuscate
+          popd

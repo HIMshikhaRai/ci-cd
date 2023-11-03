@@ -62,6 +62,11 @@ jobs:
         with:
           java-version: 11
 
+      - name: Set up Dart SDK
+        uses: dartsdk/setup-dart@v2
+        with:
+          dart-version: stable
+
       - name: Setup Melos
         uses: bluefireteam/melos-action@v2
 

@@ -71,5 +71,5 @@ jobs:
       - name: Build Android app
         run: |
           pushd app/
-          flutter build appbundle --obfuscate
+          flutter build appbundle --release --obfuscate --flavor dev -t lib/main_dev.dart
           popd
